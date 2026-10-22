@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Farmacia Cristo Médico</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <!-- Asegúrate de tener una imagen en img/logo.png -->
+        <img src="img/logo.png" alt="Logo Farmacia" class="logo" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
+        <h2>Farmacia Cristo Médico</h2>
+        <p>Sistema de Gestión</p>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Usuario (ej. admin)" required>
+            <input type="password" id="password" placeholder="Contraseña (ej. 1234)" required>
+            <button type="submit">Ingresar al Sistema</button>
+        </form>
+    </div>
+    <script>
+        // Simulación de Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if(user === 'admin' && pass === '1234') {
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('Usuario o contraseña incorrectos. Usa admin / 1234');
+            }
+        });
+    </script>
+</body>
+</html>
