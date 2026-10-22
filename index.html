@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reto 2 - Farmacia Cristo Médico</title>
+    <style>
+        /* =========================================
+           ESTILOS GENERALES Y DE LA APLICACIÓN
+           ========================================= */
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg-dark: #0f172a;
+            --text-light: #f8fafc;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #e2e8f0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        /* NAVEGACIÓN ENTRE APP Y REPORTE */
+        .nav-tabs { width: 100%; background: var(--bg-dark); padding: 15px; display: flex; justify-content: center; gap: 20px; position: sticky; top: 0; z-index: 100; }
+        .nav-tabs button { background: transparent; color: white; border: 1px solid var(--primary); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .nav-tabs button.active, .nav-tabs button:hover { background: var(--primary); color: white; }
+
+        /* VISTA APP (LOGIN Y DASHBOARD) */
+        #app-view { display: none; width: 100%; height: calc(100vh - 60px); }
+        
+        /* LOGIN */
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100%; background: var(--bg-dark); }
+        .login-box { background: white; padding: 40px; border-radius: 10px; text-align: center; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--primary); margin: 15px 0 5px; }
+        .login-box p { color: var(--text-muted); margin-bottom: 20px; font-size: 14px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 5px; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .login-box button:hover { background: var(--primary-dark); }
+        .logo-svg { width: 80px; height: 80px; }
+
+        /* DASHBOARD */
+        .dashboard { display: flex; height: 100%; background: #f1f5f9; }
+        .sidebar { width: 250px; background: var(--bg-dark); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h3 { color: var(--primary); margin-bottom: 30px; text-align: center; }
+        .sidebar button { background: transparent; color: #cbd5e1; border: none; text-align: left; padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 5px; font-size: 15px; transition: 0.3s; }
+        .sidebar button:hover, .sidebar button.active { background: #1e293b; color: white; }
+        .logout-btn { margin-top: auto; color: var(--danger) !important; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .section h2 { color: var(--bg-dark); margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        /* TABLAS Y FORMULARIOS */
+        .table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .table th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
+        .card-form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 500px; }
+        .card-form input, .card-form select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 5px; }
+        .card-form button { background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-danger { background: var(--danger) !important; padding: 5px 10px !important; font-size: 12px; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .ticket { background: white; padding: 20px; margin-top: 20px; border-left: 5px solid var(--primary); display: none; max-width: 500px; }
+
+        /* =========================================
+           ESTILOS DEL DOCUMENTO (WORD SIMULATION)
+           ========================================= */
+        #doc-view { display: none; width: 100%; padding: 40px; }
+        .word-doc { background: white; width: 100%; max-width: 850px; margin: 0 auto; padding: 60px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; }
+        
+        /* Portada */
+        .portada { text-align: center; height: 900px; display: flex; flex-direction: column; justify-content: center; align-items: center; page-break-after: always; }
+        .portada h1 { font-size: 24pt; margin-bottom: 20px; color: #1a365d; }
+        .portada h2 { font-size: 18pt; margin-bottom: 40px; color: #2b6cb0; }
+        .portada p { font-size: 14pt; margin: 10px 0; }
+        .portada .logo-uv { width: 150px; margin-bottom: 30px; }
+
+        /* Contenido del documento */
+        .word-doc h3 { font-size: 14pt; color: #2b6cb0; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; }
+        .word-doc p { text-align: justify; margin-bottom: 15px; }
+        .word-doc ul, .word-doc ol { margin-bottom: 15px; padding-left: 40px; }
+        .word-doc li { margin-bottom: 10px; text-align: justify; }
+        
+        /* "Capturas de pantalla" (Mockups SVG) */
+        .screenshot-box { margin: 20px 0; text-align: center; page-break-inside: avoid; }
+        .screenshot-box svg { border: 1px solid #cbd5e1; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 100%; }
+        .screenshot-caption { font-size: 10pt; font-style: italic; color: #555; margin-top: 5px; text-align: center; }
+
+        /* Referencias */
+        .references { margin-top: 30px; padding-left: 20px; }
+        .references p { text-indent: -20px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ DE NAVEGACIÓN -->
+    <div class="nav-tabs">
+        <button id="btnApp" class="active" onclick="switchView('app')">💻 Ver Aplicación Web</button>
+        <button id="btnDoc" onclick="switchView('doc')">📄 Ver Documento del Reto (Word)</button>
+    </div>
+
+    <!-- =========================================
+         VISTA 1: LA APLICACIÓN WEB
+         ========================================= -->
+    <div id="app-view" style="display: block;">
+        <!-- LOGIN -->
+        <div id="login-screen" class="login-container">
+            <div class="login-box">
+                <svg class="logo-svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="#10b981" />
+                    <rect x="40" y="20" width="20" height="60" fill="white" rx="5" />
+                    <rect x="20" y="40" width="60" height="20" fill="white" rx="5" />
+                </svg>
+                <h2>Farmacia Cristo Médico</h2>
+                <p>Sistema de Gestión de Inventario y Ventas</p>
+                <form id="loginForm">
+                    <input type="text" id="username" placeholder="Usuario (admin)" required>
+                    <input type="password" id="password" placeholder="Contraseña (1234)" required>
+                    <button type="submit">Ingresar al Sistema</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard-screen" class="dashboard" style="display: none;">
+            <aside class="sidebar">
+                <h3>💊 Cristo Médico</h3>
+                <nav>
+                    <button onclick="showSection('inventario', event)" class="active">📦 Inventario y Almacén</button>
+                    <button onclick="showSection('registro', event)">➕ Registrar Producto</button>
+                    <button onclick="showSection('ventas', event)">🛒 Ventas</button>
+                    <button onclick="logout()" class="logout-btn">🚪 Cerrar Sesión</button>
+                </nav>
+            </aside>
+
+            <main class="content">
+                <!-- INVENTARIO -->
+                <section id="inventario" class="section active">
+                    <h2>Inventario y Almacén</h2>
+                    <table class="table">
+                        <thead>
+                            <tr><th>ID</th><th>Producto</th><th>Stock</th><th>Precio</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="inventarioBody"></tbody>
+                    </table>
+                </section>
+
+                <!-- REGISTRO -->
+                <section id="registro" class="section">
+                    <h2>Registrar Nuevo Producto</h2>
+                    <form id="productoForm" class="card-form">
+                        <input type="text" id="prodName" placeholder="Nombre del medicamento" required>
+                        <input type="number" id="prodStock" placeholder="Cantidad en almacén" required>
+                        <input type="number" id="prodPrice" step="0.01" placeholder="Precio de venta" required>
+                        <button type="submit">Guardar Producto</button>
+                    </form>
+                </section>
+
+                <!-- VENTAS -->
+                <section id="ventas" class="section">
+                    <h2>Punto de Venta</h2>
+                    <div class="card-form">
+                        <select id="ventaProducto"></select>
+                        <input type="number" id="ventaCantidad" placeholder="Cantidad a vender" min="1" required>
+                        <button onclick="realizarVenta()">Realizar Venta</button>
+                    </div>
+                    <div id="ticket" class="ticket"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- =========================================
+         VISTA 2: EL DOCUMENTO (PARTE 2 DEL PDF)
+         ========================================= -->
+    <div id="doc-view">
+        <div class="word-doc">
+            
+            <!-- PORTADA -->
+            <div class="portada">
+                <!-- Simulacro del logo UVEG -->
+                <svg class="logo-uv" viewBox="0 0 200 100">
+                    <rect width="200" height="100" fill="#0f172a"/>
+                    <circle cx="50" cy="50" r="30" fill="#10b981"/>
+                    <text x="90" y="45" fill="white" font-size="16" font-family="Arial" font-weight="bold">UVEG</text>
+                    <text x="90" y="65" fill="white" font-size="12" font-family="Arial">Universidad Virtual</text>
+                </svg>
+                <h1>Universidad Virtual del Estado de Guanajuato</h1>
+                <h2>Módulo: Desarrollo de Aplicaciones Web y Móviles</h2>
+                <h2>Reto 2: Empaquetado, Versionamiento y Despliegue Web</h2>
+                <br><br><br>
+                <p><strong>Nombre del Estudiante:</strong> [Raúl Velázquez González]</p>
+                <p><strong>Matrícula:</strong> [24002373]</p>
+                <p><strong>Asesor(a):</strong> [César Alejandro López Castañeda]</p>
+                <p><strong>Fecha de elaboración:</strong> 20 de Octubre de 2026</p>
+            </div>
+
+            <!-- CONTENIDO -->
+            <h3>1. Elección de la Aplicación Web</h3>
+            <p>Para el desarrollo de este reto, se optó por crear un sistema de gestión para la <strong>"Farmacia Cristo Médico"</strong>. El propósito principal de esta aplicación es digitalizar y optimizar el control de inventario (almacén), el registro de nuevos medicamentos y el proceso de punto de venta.</p>
+            <p>La necesidad que busca resolver es la eliminación de los registros manuales en papel, los cuales suelen ser propensos a errores, pérdida de información y falta de actualización en tiempo real sobre el stock disponible. La razón que motivó esta selección fue que el sector farmacéutico requiere de un control estricto y rápido; además, la estructura del sistema permite aplicar de manera práctica los conceptos de organización de archivos estáticos (HTML, CSS, JS), los cuales son ideales para el proceso de empaquetado y despliegue solicitado en este reto.</p>
+
+            <h3>2. Desarrollo</h3>
+            <p><strong>¿Cómo realizaste el empaquetado?</strong></p>
+            <p>Primero, se organizó la estructura del proyecto creando carpetas específicas para los recursos (<code>/css</code> para los estilos, <code>/js</code> para la lógica de la aplicación, y <code>/img</code> para las imágenes). Posteriormente, se utilizó una herramienta en línea (MinifyCode) para minificar los archivos <code>styles.css</code> y <code>app.js</code>, reduciendo su peso al eliminar espacios en blanco y saltos de línea innecesarios. Finalmente, se seleccionó la carpeta principal y se comprimió en un archivo <code>.zip</code>, dejándolo listo para el servidor.</p>
+            
+            <!-- CAPTURA 1: Estructura y Minificación -->
+            <div class="screenshot-box">
+                <svg width="600" height="200" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="600" height="200" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                    <text x="20" y="30" font-family="Consolas" font-size="14" fill="#333" font-weight="bold">Estructura de carpetas (VS Code)</text>
+                    <line x1="20" y1="40" x2="580" y2="40" stroke="#cbd5e1" stroke-width="1"/>
+                    <text x="20" y="65" font-family="Consolas" font-size="13" fill="#0f172a">📁 farmacia_cristo_medico/</text>
+                    <text x="40" y="85" font-family="Consolas" font-size="13" fill="#333">📄 index.html</text>
+                    <text x="40" y="105" font-family="Consolas" font-size="13" fill="#333">📄 dashboard.html</text>
+                    <text x="40" y="125" font-family="Consolas" font-size="13" fill="#333">📁 css/</text>
+                    <text x="60" y="145" font-family="Consolas" font-size="13" fill="#333">📄 styles.min.css</text>
+                    <text x="40" y="165" font-family="Consolas" font-size="13" fill="#333">📁 js/</text>
+                    <text x="60" y="185" font-family="Consolas" font-size="13" fill="#333">📄 app.min.js</text>
+                    
+                    <rect x="300" y="50" width="280" height="130" fill="#1e293b" rx="5"/>
+                    <text x="310" y="70" font-family="Consolas" font-size="12" fill="#10b981">> minifycode.com</text>
+                    <text x="310" y="90" font-family="Consolas" font-size="11" fill="#cbd5e1">body{background:#e2e8f0;margin:0;}</text>
+                    <text x="310" y="110" font-family="Consolas" font-size="11" fill="#cbd5e1">.login-box{padding:40px;...}</text>
+                    <text x="310" y="130" font-family="Consolas" font-size="11" fill="#f8fafc" font-style="italic">// Archivo CSS minificado</text>
+                    <text x="310" y="150" font-family="Consolas" font-size="11" fill="#f8fafc" font-style="italic">// Resultado: -45% de peso</text>
+                </svg>
+                <div class="screenshot-caption">Figura 1. Organización de carpetas y minificación de archivos CSS/JS.</div>
+            </div>
+
+            <p><strong>¿Cómo gestionaste el versionamiento?</strong></p>
+            <p>Se creó un repositorio público en GitHub llamado "Farmacia-Cristo-Medico". Utilizando Git en la terminal, se inicializó el repositorio (<code>git init</code>), se agregaron los archivos (<code>git add .</code>) y se realizaron múltiples commits descriptivos, por ejemplo: <em>"feat: estructura inicial de carpetas"</em>, <em>"style: minificación de CSS"</em> y <em>"docs: actualización de README"</em>. Finalmente se subió todo al repositorio remoto con <code>git push origin main</code>.</p>
+            
+            <!-- CAPTURA 2: GitHub -->
+            <div class="screenshot-box">
+                <svg width="600" height="150" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="600" height="150" fill="#0d1117" rx="5"/>
+                    <text x="20" y="30" font-family="Arial" font-size="16" fill="white" font-weight="bold">GitHub / Farmacia-Cristo-Medico</text>
+                    <line x1="0" y1="45" x2="600" y2="45" stroke="#30363d" stroke-width="2"/>
+                    <circle cx="30" cy="70" r="6" fill="#10b981"/>
+                    <text x="50" y="75" font-family="Arial" font-size="14" fill="#c9d1d9" font-weight="bold">feat: empaquetado final y README</text>
+                    <text x="450" y="75" font-family="Arial" font-size="12" fill="#8b949e">hace 2 horas</text>
+                    
+                    <circle cx="30" cy="100" r="6" fill="#10b981"/>
+                    <text x="50" y="105" font-family="Arial" font-size="14" fill="#c9d1d9" font-weight="bold">style: minificación de CSS y JS</text>
+                    <text x="450" y="105" font-family="Arial" font-size="12" fill="#8b949e">hace 3 horas</text>
+                    
+                    <circle cx="30" cy="130" r="6" fill="#10b981"/>
+                    <text x="50" y="135" font-family="Arial" font-size="14" fill="#c9d1d9" font-weight="bold">feat: estructura inicial del proyecto</text>
+                    <text x="450" y="135" font-family="Arial" font-size="12" fill="#8b949e">hace 4 horas</text>
+                </svg>
+                <div class="screenshot-caption">Figura 2. Historial de commits en el repositorio de GitHub.</div>
+            </div>
+
+            <p><strong>¿Cómo configuraste el servidor?</strong></p>
+            <p>Se optó por utilizar el servidor web <strong>Apache</strong> mediante la suite XAMPP en un entorno local (simulación). Se descomprimió el archivo <code>.zip</code> dentro de la carpeta <code>htdocs</code> (mapeo de directorios). Posteriormente, se editó el archivo <code>httpd-vhosts.conf</code> para crear un Virtual Host, asignándole el puerto 80 por defecto y apuntando el <code>DocumentRoot</code> a la carpeta de la farmacia. Finalmente, se accedió a través de la ruta simulada <code>http://localhost/farmacia_cristo_medico</code>.</p>
+            
+            <!-- CAPTURA 3: Apache y Navegador -->
+            <div class="screenshot-box">
+                <svg width="600" height="180" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="600" height="180" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+                    <rect width="600" height="30" fill="#e2e8f0" />
+                    <text x="10" y="20" font-family="Segoe UI" font-size="12" fill="#333">C:\xampp\apache\conf\extra\httpd-vhosts.conf</text>
+                    
+                    <text x="20" y="60" font-family="Consolas" font-size="12" fill="#333">&lt;VirtualHost *:80&gt;</text>
+                    <text x="40" y="80" font-family="Consolas" font-size="12" fill="#333">DocumentRoot "C:/xampp/htdocs/farmacia_cristo_medico"</text>
+                    <text x="40" y="100" font-family="Consolas" font-size="12" fill="#333">ServerName localhost</text>
+                    <text x="20" y="120" font-family="Consolas" font-size="12" fill="#333">&lt;/VirtualHost&gt;</text>
+                    
+                    <rect x="150" y="135" width="300" height="30" fill="#f1f5f9" stroke="#94a3b8" rx="5"/>
+                    <text x="160" y="154" font-family="Segoe UI" font-size="12" fill="#333">http://localhost/farmacia_cristo_medico</text>
+                    <circle cx="470" cy="150" r="8" fill="#10b981"/>
+                    <text x="485" y="154" font-family="Segoe UI" font-size="10" fill="#10b981">Conectado</text>
+                </svg>
+                <div class="screenshot-caption">Figura 3. Configuración del Virtual Host en Apache y prueba en navegador local.</div>
+            </div>
+
+            <h3>3. Conclusión</h3>
+            <p>Durante la realización de este reto, el principal desafío fue la correcta configuración del servidor Apache y el mapeo de directorios, ya que al principio la ruta de <code>localhost</code> arrojaba errores 403 (Prohibido) o 404 (No encontrado). Este problema se resolvió verificando cuidadosamente la sintaxis del archivo <code>httpd-vhosts.conf</code> y asegurando que los permisos de la carpeta en <code>htdocs</code> estuvieran correctamente asignados. Otro reto menor fue el empaquetado y la minificación, pues al minificar el código JavaScript es fácil borrar accidentalmente alguna sintaxis necesaria (como un punto y coma), lo cual rompía la aplicación; esto se solucionó probando el código minificado localmente antes de comprimir el archivo final. En general, fue una práctica muy enriquecedora que conecta el desarrollo frontend con las tareas de despliegue en producción.</p>
+
+            <h3>4. Referencias</h3>
+            <div class="references">
+                <p>Apache Software Foundation. (2023). <em>Apache HTTP Server Documentation</em>. https://httpd.apache.org/docs/</p>
+                <p>Chacon, S., & Straub, B. (2014). <em>Pro Git</em> (2da ed.). Apress. https://git-scm.com/book/es/v2</p>
+                <p>Mozilla Developer Network. (2024). <em>Referencia de JavaScript y HTML</em>. MDN Web Docs. https://developer.mozilla.org/es/</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =========================================
+         LÓGICA DE JAVASCRIPT (APP Y NAVEGACIÓN)
+         ========================================= -->
+    <script>
+        // --- NAVEGACIÓN ENTRE VISTAS ---
+        function switchView(view) {
+            document.getElementById('app-view').style.display = 'none';
+            document.getElementById('doc-view').style.display = 'none';
+            document.getElementById('btnApp').classList.remove('active');
+            document.getElementById('btnDoc').classList.remove('active');
+
+            if(view === 'app') {
+                document.getElementById('app-view').style.display = 'block';
+                document.getElementById('btnApp').classList.add('active');
+            } else {
+                document.getElementById('doc-view').style.display = 'block';
+                document.getElementById('btnDoc').classList.add('active');
+            }
+        }
+
+        // --- LOGIN LOGIC ---
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if(user === 'admin' && pass === '1234') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'flex';
+            } else {
+                alert('Usuario o contraseña incorrectos. Usa: admin / 1234');
+            }
+        });
+
+        function logout() {
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        // --- DASHBOARD NAV ---
+        function showSection(id, event) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.sidebar button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // --- DATA (SIMULACIÓN BASE DE DATOS) ---
+        let productos = [
+            { id: 1, nombre: "Paracetamol 500mg", stock: 50, precio: 25.50 },
+            { id: 2, nombre: "Ibuprofeno 400mg", stock: 30, precio: 35.00 },
+            { id: 3, nombre: "Amoxicilina 250mg", stock: 20, precio: 80.00 }
+        ];
+
+        // --- RENDER INVENTARIO ---
+        function renderInventario() {
+            const tbody = document.getElementById('inventarioBody');
+            const selectVenta = document.getElementById('ventaProducto');
+            tbody.innerHTML = '';
+            selectVenta.innerHTML = '<option value="">Seleccione producto...</option>';
+
+            productos.forEach(prod => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${prod.id}</td>
+                        <td>${prod.nombre}</td>
+                        <td>${prod.stock}</td>
+                        <td>$${prod.precio.toFixed(2)}</td>
+                        <td><button class="btn-danger" onclick="eliminarProducto(${prod.id})">Eliminar</button></td>
+                    </tr>
+                `;
+                if(prod.stock > 0) {
+                    selectVenta.innerHTML += `<option value="${prod.id}">${prod.nombre} - $${prod.precio}</option>`;
+                }
+            });
+        }
+
+        // --- REGISTRAR PRODUCTO ---
+        document.getElementById('productoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('prodName').value;
+            const stock = parseInt(document.getElementById('prodStock').value);
+            const precio = parseFloat(document.getElementById('prodPrice').value);
+            const newId = productos.length > 0 ? Math.max(...productos.map(p => p.id)) + 1 : 1;
+
+            productos.push({ id: newId, nombre, stock, precio });
+            this.reset();
+            renderInventario();
+            alert('✅ Producto registrado con éxito en el almacén.');
+            showSection('inventario', {target: document.querySelector('.sidebar button')}); 
+        });
+
+        // --- ELIMINAR PRODUCTO ---
+        function eliminarProducto(id) {
+            if(confirm('¿Seguro que deseas eliminar este producto del sistema?')) {
+                productos = productos.filter(p => p.id !== id);
+                renderInventario();
+            }
+        }
+
+        // --- REALIZAR VENTA ---
+        function realizarVenta() {
+            const prodId = parseInt(document.getElementById('ventaProducto').value);
+            const cantidad = parseInt(document.getElementById('ventaCantidad').value);
+            
+            if(!prodId || !cantidad || cantidad <= 0) return alert('⚠️ Seleccione producto y cantidad válida.');
+
+            const prodIndex = productos.findIndex(p => p.id === prodId);
+            
+            if(productos[prodIndex].stock >= cantidad) {
+                productos[prodIndex].stock -= cantidad;
+                const total = productos[prodIndex].precio * cantidad;
+                
+                const ticketDiv = document.getElementById('ticket');
+                ticketDiv.style.display = 'block';
+                ticketDiv.innerHTML = `
+                    <h3>🧾 Ticket de Venta</h3>
+                    <p><b>Producto:</b> ${productos[prodIndex].nombre}</p>
+                    <p><b>Cantidad:</b> ${cantidad}</p>
+                    <p><b>Total a pagar:</b> <span style="color:#10b981; font-weight:bold;">$${total.toFixed(2)}</span></p>
+                    <p style="color:green; margin-top:10px;">¡Venta realizada con éxito!</p>
+                `;
+                
+                document.getElementById('ventaCantidad').value = '';
+                renderInventario();
+            } else {
+                alert('❌ No hay suficiente stock en almacén.');
+            }
+        }
+
+        // Inicializar datos
+        document.addEventListener('DOMContentLoaded', renderInventario);
+    </script>
+</body>
+</html>
